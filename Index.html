@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Daily Sales Report Mini App</title>
+  <title>Daily Operations Entry</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
@@ -52,7 +52,7 @@
 </head>
 <body>
 
-  <h2> Daily Sales Entry</h2>
+  <h2>Daily Sales & Collection Entry</h2>
 
   <!-- Header Info -->
   <div class="card">
@@ -88,12 +88,12 @@
 
   <!-- Collections -->
   <div class="card">
-    <h3>2. Payments & Collections (ETB)</h3>
-    <div><label>Coop Bank</label><input type="number" id="coop" value="43300" oninput="calc()"></div>
-    <div><label>Telebirr Total</label><input type="number" id="telebirr" value="39350" oninput="calc()"></div>
-    <div><label>Bemekina Yetewesede</label><input type="number" id="bemekina" value="36500" oninput="calc()"></div>
-    <div><label>Best West Hotel</label><input type="number" id="hotel" value="27500" oninput="calc()"></div>
-    <div><label>Credit Gebi (መገናኛ ጁስ)</label><input type="number" id="credit" value="5180" oninput="calc()"></div>
+    <h3>2. Collection Channels (ETB)</h3>
+    <div><label>Coop Channel</label><input type="number" id="c_coop" value="43300" oninput="calc()"></div>
+    <div><label>Tele Channel</label><input type="number" id="c_tele" value="39350" oninput="calc()"></div>
+    <div><label>Bemekina Collection</label><input type="number" id="c_bemekina" value="36500" oninput="calc()"></div>
+    <div><label>Best West Hotel</label><input type="number" id="c_hotel" value="27500" oninput="calc()"></div>
+    <div><label>Credit Gebi (መገናኛ ጁስ)</label><input type="number" id="c_credit" value="5180" oninput="calc()"></div>
     <div class="summary-box" style="margin-top:10px;">
       Total Accounted Collections: <span id="lblCollections">0</span> ETB
     </div>
@@ -102,9 +102,9 @@
   <!-- Reconciliation -->
   <div class="card">
     <h3>3. Reconciliation & Adjustments</h3>
-    <div><label>Target Sales (Total Birr)</label><input type="number" id="targetBirr" value="148700" oninput="calc()"></div>
-    <div><label>Uncollected Funds (ያልገባ ብር)</label><input type="number" id="uncollected" value="2050" oninput="calc()"></div>
-    <div><label>Yesterday's Remaining (የትላንትና ቀሪ)</label><input type="number" id="yesterday" value="50" oninput="calc()"></div>
+    <div><label>Target Amount (Total Birr)</label><input type="number" id="targetBirr" value="148700" oninput="calc()"></div>
+    <div><label>Uncollected (ያልገባ ብር)</label><input type="number" id="uncollected" value="2050" oninput="calc()"></div>
+    <div><label>Yesterday Balance (የትላንትና ቀሪ)</label><input type="number" id="yesterday" value="50" oninput="calc()"></div>
   </div>
 
   <!-- Grand Total -->
@@ -128,7 +128,7 @@
       let returns = n('p35_r') + n('p60_r') + n('p10_r') + n('p20_r');
       let net = gross - returns;
 
-      let collections = n('coop') + n('telebirr') + n('bemekina') + n('hotel') + n('credit');
+      let collections = n('c_coop') + n('c_tele') + n('c_bemekina') + n('c_hotel') + n('c_credit');
       let adjustments = n('uncollected') + n('yesterday');
       let grandTotal = collections + adjustments;
 
@@ -143,17 +143,17 @@
         rep: document.getElementById('repName').value,
         date: document.getElementById('reportDate').value,
         grossPacks: n('p35_g') + n('p60_g') + n('p10_g') + n('p20_g'),
-        netSold: n('p35_g') - n('p35_r') + n('p60_g') - n('p60_r') + n('p10_g') - n('p10_r') + n('p20_g') - n('p20_r'),
-        coop: n('coop'),
-        telebirr: n('telebirr'),
-        bemekina: n('bemekina'),
-        hotel: n('hotel'),
-        creditGebi: n('credit'),
-        totalCollections: n('coop') + n('telebirr') + n('bemekina') + n('hotel') + n('credit'),
+        netSold: (n('p35_g') - n('p35_r')) + (n('p60_g') - n('p60_r')) + (n('p10_g') - n('p10_r')) + (n('p20_g') - n('p20_r')),
+        coop: n('c_coop'),
+        telebirr: n('c_tele'),
+        bemekina: n('c_bemekina'),
+        hotel: n('c_hotel'),
+        creditGebi: n('c_credit'),
+        totalCollections: n('c_coop') + n('c_tele') + n('c_bemekina') + n('c_hotel') + n('c_credit'),
         targetBirr: n('targetBirr'),
         uncollected: n('uncollected'),
         yesterdayBalance: n('yesterday'),
-        grandTotal: (n('coop') + n('telebirr') + n('bemekina') + n('hotel') + n('credit')) + n('uncollected') + n('yesterday')
+        grandTotal: (n('c_coop') + n('c_tele') + n('c_bemekina') + n('c_hotel') + n('c_credit')) + n('uncollected') + n('yesterday')
       };
 
       tg.sendData(JSON.stringify(payload));
@@ -163,3 +163,4 @@
   </script>
 </body>
 </html>
+
