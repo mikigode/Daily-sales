@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Sales Report Mini App</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg-color: var(--tg-theme-bg-color, #f4f6f9);
+      --text-color: var(--tg-theme-text-color, #1e293b);
+      --card-bg: var(--tg-theme-secondary-bg-color, #ffffff);
+      --primary: var(--tg-theme-button-color, #1e3a8a);
+      --primary-text: var(--tg-theme-button-text-color, #ffffff);
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0; padding: 12px;
+      box-sizing: border-box;
+    }
+    h2, h3 { margin: 8px 0; color: #1e3a8a; }
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    label { font-size: 12px; font-weight: 600; text-transform: uppercase; color: #64748b; }
+    input {
+      width: 100%; padding: 10px; margin-top: 4px;
+      border: 1px solid #cbd5e1; border-radius: 8px;
+      font-size: 14px; box-sizing: border-box;
+    }
+    .summary-box {
+      background: #e0f2fe; border-left: 4px solid #1e3a8a;
+      padding: 10px; border-radius: 6px; font-size: 13px; font-weight: 600;
+    }
+    .grand-box {
+      background: #d2e3c8; border-left: 4px solid #064e3b;
+      padding: 12px; border-radius: 6px; font-size: 15px; font-weight: bold; color: #064e3b;
+    }
+    button {
+      width: 100%; padding: 14px; background: #1e3a8a; color: white;
+      border: none; border-radius: 10px; font-size: 16px; font-weight: bold;
+      cursor: pointer; margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2> Daily Sales Entry</h2>
+
+  <!-- Header Info -->
+  <div class="card">
+    <div class="grid">
+      <div>
+        <label>Sales Rep</label>
+        <input type="text" id="repName" value="Bealem">
+      </div>
+      <div>
+        <label>Date</label>
+        <input type="date" id="reportDate">
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Sales Breakdown -->
+  <div class="card">
+    <h3>1. Product Sales (Gross / Return)</h3>
+    <div class="grid">
+      <div><label>0.35L Pack</label><input type="number" id="p35_g" value="150" oninput="calc()"></div>
+      <div><label>0.35L Return</label><input type="number" id="p35_r" value="0" oninput="calc()"></div>
+      <div><label>0.6L Pack</label><input type="number" id="p60_g" value="200" oninput="calc()"></div>
+      <div><label>0.6L Return</label><input type="number" id="p60_r" value="21" oninput="calc()"></div>
+      <div><label>1L Pack</label><input type="number" id="p10_g" value="180" oninput="calc()"></div>
+      <div><label>1L Return</label><input type="number" id="p10_r" value="59" oninput="calc()"></div>
+      <div><label>2L Pack</label><input type="number" id="p20_g" value="200" oninput="calc()"></div>
+      <div><label>2L Return</label><input type="number" id="p20_r" value="1" oninput="calc()"></div>
+    </div>
+    <div class="summary-box">
+      Total Packs: <span id="lblGross">0</span> | Net Sold: <span id="lblNet">0</span>
+    </div>
+  </div>
+
+  <!-- Collections -->
+  <div class="card">
+    <h3>2. Payments & Collections (ETB)</h3>
+    <div><label>Coop Bank</label><input type="number" id="coop" value="43300" oninput="calc()"></div>
+    <div><label>Telebirr Total</label><input type="number" id="telebirr" value="39350" oninput="calc()"></div>
+    <div><label>Bemekina Yetewesede</label><input type="number" id="bemekina" value="36500" oninput="calc()"></div>
+    <div><label>Best West Hotel</label><input type="number" id="hotel" value="27500" oninput="calc()"></div>
+    <div><label>Credit Gebi (መገናኛ ጁስ)</label><input type="number" id="credit" value="5180" oninput="calc()"></div>
+    <div class="summary-box" style="margin-top:10px;">
+      Total Accounted Collections: <span id="lblCollections">0</span> ETB
+    </div>
+  </div>
+
+  <!-- Reconciliation -->
+  <div class="card">
+    <h3>3. Reconciliation & Adjustments</h3>
+    <div><label>Target Sales (Total Birr)</label><input type="number" id="targetBirr" value="148700" oninput="calc()"></div>
+    <div><label>Uncollected Funds (ያልገባ ብር)</label><input type="number" id="uncollected" value="2050" oninput="calc()"></div>
+    <div><label>Yesterday's Remaining (የትላንትና ቀሪ)</label><input type="number" id="yesterday" value="50" oninput="calc()"></div>
+  </div>
+
+  <!-- Grand Total -->
+  <div class="card grand-box">
+    Grand Total Accounted: <br><span id="lblGrandTotal" style="font-size: 22px;">0.00</span> ETB
+  </div>
+
+  <button onclick="sendData()">Submit Daily Report</button>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    // Set today's date default
+    document.getElementById('reportDate').valueAsDate = new Date();
+
+    function n(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+    function calc() {
+      let gross = n('p35_g') + n('p60_g') + n('p10_g') + n('p20_g');
+      let returns = n('p35_r') + n('p60_r') + n('p10_r') + n('p20_r');
+      let net = gross - returns;
+
+      let collections = n('coop') + n('telebirr') + n('bemekina') + n('hotel') + n('credit');
+      let adjustments = n('uncollected') + n('yesterday');
+      let grandTotal = collections + adjustments;
+
+      document.getElementById('lblGross').innerText = gross;
+      document.getElementById('lblNet').innerText = net;
+      document.getElementById('lblCollections').innerText = collections.toLocaleString();
+      document.getElementById('lblGrandTotal').innerText = grandTotal.toLocaleString();
+    }
+
+    function sendData() {
+      const payload = {
+        rep: document.getElementById('repName').value,
+        date: document.getElementById('reportDate').value,
+        grossPacks: n('p35_g') + n('p60_g') + n('p10_g') + n('p20_g'),
+        netSold: n('p35_g') - n('p35_r') + n('p60_g') - n('p60_r') + n('p10_g') - n('p10_r') + n('p20_g') - n('p20_r'),
+        coop: n('coop'),
+        telebirr: n('telebirr'),
+        bemekina: n('bemekina'),
+        hotel: n('hotel'),
+        creditGebi: n('credit'),
+        totalCollections: n('coop') + n('telebirr') + n('bemekina') + n('hotel') + n('credit'),
+        targetBirr: n('targetBirr'),
+        uncollected: n('uncollected'),
+        yesterdayBalance: n('yesterday'),
+        grandTotal: (n('coop') + n('telebirr') + n('bemekina') + n('hotel') + n('credit')) + n('uncollected') + n('yesterday')
+      };
+
+      tg.sendData(JSON.stringify(payload));
+    }
+
+    calc();
+  </script>
+</body>
+</html>
