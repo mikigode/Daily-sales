@@ -4,7 +4,33 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Daily Operations Entry</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js">// Include Telegram WebApp SDK script in your HTML <head> if not already added:
+// <script src="https://telegram.org/js/telegram-web-app.js">
+
+document.addEventListener("DOMContentLoaded", function () {
+    const tg = window.Telegram?.WebApp;
+    let repName = "";
+
+    // Method 1: Get name directly from Telegram WebApp API
+    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        const user = tg.initDataUnsafe.user;
+        repName = user.first_name + (user.last_name ? " " + user.last_name : "");
+    }
+
+    // Method 2: Fallback to reading URL query string (?rep=...)
+    if (!repName) {
+        const urlParams = new URLSearchParams(window.location.search);
+        repName = urlParams.get('rep') || "";
+    }
+
+    // Auto-fill and lock/readonly the Sales Rep input element in your HTML
+    const repInput = document.getElementById("rep"); // Make sure your input element has id="rep"
+    if (repInput && repName) {
+        repInput.value = repName;
+        repInput.readOnly = true; // Prevents manual editing so rep name stays authentic
+    }
+});
+</script>
   <style>
     :root {
       --bg-color: var(--tg-theme-bg-color, #f4f6f9);
