@@ -23,7 +23,7 @@ BOT_TOKEN = "8564193233:AAGVFJG_IlC0_CImb06HzuBS-PnNaaACeDg"
 BASE_WEB_APP_URL = "https://mikigode.github.io/Daily-sales/"
 
 # Target Telegram Group ID
-GROUP_CHAT_ID = -1005578584676  
+GROUP_CHAT_ID = -5578584676
 
 # Sets for user permissions
 APPROVED_USERS = set()
@@ -31,7 +31,7 @@ ADMIN_IDS = {393743768}
 
 # Enable logging
 logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", 
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO
 )
 
@@ -49,7 +49,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         dynamic_url = f"{BASE_WEB_APP_URL}?rep={encoded_name}&user_id={user_id}"
 
         web_app_btn = KeyboardButton(
-            text="📊 Open Daily Sales Form", 
+            text="📊 Open Daily Sales Form",
             web_app=WebAppInfo(url=dynamic_url)
         )
         reply_markup = ReplyKeyboardMarkup([[web_app_btn]], resize_keyboard=True)
@@ -60,13 +60,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         keyboard = [[InlineKeyboardButton("📩 Request Access from Admin", callback_data=f"req_access:{user_id}")]]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        
+
         restricted_msg = (
             "🔒 *Access Restricted*\n\n"
             "You are not an approved sales representative yet.\n"
             "Click the button below to request access from the group admins."
         )
-        
+
         await update.message.reply_text(
             restricted_msg,
             reply_markup=reply_markup,
@@ -77,7 +77,7 @@ async def handle_approval_request(update: Update, context: ContextTypes.DEFAULT_
     """Triggered when an unapproved user clicks 'Request Access from Admin'."""
     query = update.callback_query
     await query.answer()
-    
+
     req_user = query.from_user
     req_user_id = req_user.id
 
@@ -113,7 +113,7 @@ async def handle_admin_action(update: Update, context: ContextTypes.DEFAULT_TYPE
     """Handles Admin clicking 'Approve Rep' or 'Reject' inside the group chat."""
     query = update.callback_query
     await query.answer()
-    
+
     clicker_id = update.effective_user.id
     action, target_id = query.data.split(":")
     target_id = int(target_id)
@@ -137,19 +137,19 @@ async def handle_admin_action(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     if action == "approve":
         APPROVED_USERS.add(target_id)
-        
+
         await query.edit_message_text(
             f"✅ *Representative Approved!*\n\n👤 User ID `{target_id}` has been approved by {admin_name}.",
             parse_mode="Markdown"
         )
-        
+
         try:
             web_app_btn = KeyboardButton(
-                text="📊 Open Daily Sales Form", 
+                text="📊 Open Daily Sales Form",
                 web_app=WebAppInfo(url=f"{BASE_WEB_APP_URL}?user_id={target_id}")
             )
             reply_markup = ReplyKeyboardMarkup([[web_app_btn]], resize_keyboard=True)
-            
+
             await context.bot.send_message(
                 chat_id=target_id,
                 text="🎉 *Access Granted!*\n\nYour account has been approved by the Admin. Click below to open your Daily Sales Form.",
@@ -168,7 +168,7 @@ async def handle_admin_action(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def approve_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Group command allowing admins to approve directly: /approve"""
     clicker_id = update.effective_user.id
-    
+
     is_admin = False
     if clicker_id in ADMIN_IDS:
         is_admin = True
@@ -212,22 +212,22 @@ async def handle_web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     try:
         data = json.loads(update.message.web_app_data.data)
-        
+
         # Dynamically determine the sales rep name
         rep_name = data.get('rep') or user_full_name
-        
+
         # Extract and parse direct collections
         coop = float(data.get('coop', 0) or 0)
         telebirr = float(data.get('telebirr', 0) or 0)
         bemekina = float(data.get('bemekina', 0) or 0)
-        
+
         # Extract and parse credit sales
         hotel = float(data.get('hotel', 0) or 0)
         credit_gebi = float(data.get('creditGebi', 0) or 0)
-        
+
         total_collected = coop + telebirr + bemekina
         total_credit = hotel + credit_gebi
-        
+
         report_text = (
             f"📋 **DAILY SALES & COLLECTION REPORT**\n"
             f"👤 **Sales Rep:** {rep_name}\n"
@@ -251,7 +251,7 @@ async def handle_web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE
             f"• Yesterday's Balance (የትላንትና ቀሪ): `{data.get('yesterdayBalance', 0):,} ETB`\n\n"
             f"🏆 **GRAND TOTAL ACCOUNTED:** `{data.get('grandTotal', 0):,} ETB`"
         )
-        
+
         await update.message.reply_text("✅ Report successfully submitted to the Group!", parse_mode="Markdown")
 
         await context.bot.send_message(
@@ -259,7 +259,7 @@ async def handle_web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE
             text=report_text,
             parse_mode="Markdown"
         )
-        
+
     except Exception as e:
         logging.error(f"Error processing WebApp data: {e}")
         await update.message.reply_text("❌ Error processing submitted report. Please try again.")
@@ -267,13 +267,13 @@ async def handle_web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE
 def main():
     """Start the Telegram bot."""
     app = ApplicationBuilder().token(BOT_TOKEN).build()
-    
+
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("approve", approve_command))
     app.add_handler(CallbackQueryHandler(handle_approval_request, pattern="^req_access:"))
     app.add_handler(CallbackQueryHandler(handle_admin_action, pattern="^(approve|reject):"))
     app.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, handle_web_app_data))
-    
+
     print("Bot is running with Dynamic Sales Rep & Credit Sales separation...")
     app.run_polling()
 
