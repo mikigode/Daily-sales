@@ -9,28 +9,70 @@
 
 document.addEventListener("DOMContentLoaded", function () {
     const tg = window.Telegram?.WebApp;
+    if (tg) {
+        tg.ready();
+        tg.expand();
+    }
+
+    // Set default date to today
+    document.getElementById("date").valueAsDate = new Date();
+
+    // Detect Sales Rep Name
     let repName = "";
 
-    // Method 1: Get name directly from Telegram WebApp API
+    // 1. Read directly from Telegram WebApp user object
     if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        const user = tg.initDataUnsafe.user;
-        repName = user.first_name + (user.last_name ? " " + user.last_name : "");
+        const u = tg.initDataUnsafe.user;
+        repName = u.first_name + (u.last_name ? " " + u.last_name : "");
     }
 
-    // Method 2: Fallback to reading URL query string (?rep=...)
+    // 2. Fallback: Read from URL query string ?rep=...
     if (!repName) {
         const urlParams = new URLSearchParams(window.location.search);
-        repName = urlParams.get('rep') || "";
+        const queryRep = urlParams.get('rep');
+        if (queryRep) {
+            repName = decodeURIComponent(queryRep);
+        }
     }
 
-    // Auto-fill and lock/readonly the Sales Rep input element in your HTML
-    const repInput = document.getElementById("rep"); // Make sure your input element has id="rep"
-    if (repInput && repName) {
+    // Auto-fill field
+    const repInput = document.getElementById("rep");
+    if (repName) {
         repInput.value = repName;
-        repInput.readOnly = true; // Prevents manual editing so rep name stays authentic
+        repInput.setAttribute("readonly", true);
+    } else {
+        repInput.removeAttribute("readonly");
     }
+
+    // Submission handler
+    document.getElementById("salesForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const payload = {
+            // Make sure this reads dynamically from the input box!
+            rep: document.getElementById("rep").value || "Unknown Rep",
+            date: document.getElementById("date").value,
+            grossPacks: document.getElementById("grossPacks").value || "0",
+            netSold: document.getElementById("netSold").value || "0",
+            coop: document.getElementById("coop").value || "0",
+            telebirr: document.getElementById("telebirr").value || "0",
+            bemekina: document.getElementById("bemekina").value || "0",
+            hotel: document.getElementById("hotel").value || "0",
+            creditGebi: document.getElementById("creditGebi").value || "0",
+            targetBirr: document.getElementById("targetBirr").value || "0",
+            uncollected: document.getElementById("uncollected").value || "0",
+            yesterdayBalance: document.getElementById("yesterdayBalance").value || "0",
+            grandTotal: document.getElementById("grandTotal").value || "0"
+        };
+
+        if (tg) {
+            tg.sendData(JSON.stringify(payload));
+        } else {
+            alert("Please open inside Telegram.");
+        }
+    });
 });
-</script>
+  </script>
   <style>
     :root {
       --bg-color: var(--tg-theme-bg-color, #f4f6f9);
